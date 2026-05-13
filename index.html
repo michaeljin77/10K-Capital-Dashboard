@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>10K Fund 1 · LP Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  --bg: #0a0b0f;
+  --bg-card: #12141a;
+  --bg-card-hover: #181b24;
+  --bg-surface: #1a1d27;
+  --border: rgba(255,255,255,0.06);
+  --border-hover: rgba(255,255,255,0.12);
+  --text: #e8e6e1;
+  --text-muted: #8b8a86;
+  --text-dim: #5a5955;
+  --accent: #3b82f6;
+  --accent-glow: rgba(59,130,246,0.15);
+  --green: #22c55e;
+  --green-dim: rgba(34,197,94,0.12);
+  --red: #ef4444;
+  --red-dim: rgba(239,68,68,0.12);
+  --amber: #f59e0b;
+  --amber-dim: rgba(245,158,11,0.12);
+  --purple: #a78bfa;
+  --teal: #2dd4bf;
+  --font: 'DM Sans', -apple-system, sans-serif;
+  --mono: 'Space Mono', monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+.grain {
+  position: fixed; inset: 0; z-index: 9999; pointer-events: none; opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.glow-orb {
+  position: fixed; width: 600px; height: 600px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+  top: -200px; right: -200px;
+}
+
+.glow-orb-2 {
+  position: fixed; width: 500px; height: 500px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(34,197,94,0.04) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+  bottom: -150px; left: -150px;
+}
+
+.container {
+  max-width: 1280px; margin: 0 auto; padding: 0 2rem;
+  position: relative; z-index: 1;
+}
+
+/* Header */
+header {
+  padding: 3rem 0 1rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2rem;
+}
+
+.header-top {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.logo-area {
+  display: flex; align-items: center; gap: 1rem;
+}
+
+.logo-mark {
+  width: 44px; height: 44px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent), #60a5fa);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-weight: 700; font-size: 14px; color: #fff;
+  letter-spacing: -0.5px;
+}
+
+.logo-text h1 {
+  font-size: 1.4rem; font-weight: 700; letter-spacing: -0.02em;
+}
+
+.logo-text p {
+  font-size: 0.75rem; color: var(--text-muted); font-family: var(--mono);
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+
+.header-meta {
+  text-align: right; font-size: 0.8rem; color: var(--text-dim);
+  font-family: var(--mono);
+}
+
+.header-meta .date { color: var(--text-muted); font-size: 0.85rem; }
+
+/* Nav tabs */
+.nav-tabs {
+  display: flex; gap: 0; margin: 2rem 0 1.5rem;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+}
+
+.nav-tab {
+  padding: 0.75rem 1.5rem;
+  font-size: 0.85rem; font-weight: 500;
+  color: var(--text-dim);
+  cursor: pointer; border-bottom: 2px solid transparent;
+  transition: all 0.2s; white-space: nowrap;
+  background: none; border-top: none; border-left: none; border-right: none;
+  font-family: var(--font);
+}
+
+.nav-tab:hover { color: var(--text-muted); }
+.nav-tab.active { color: var(--text); border-bottom-color: var(--accent); }
+
+/* Sections */
+.section { display: none; animation: fadeUp 0.4s ease; }
+.section.active { display: block; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Metric cards */
+.metrics-row {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem; margin-bottom: 2rem;
+}
+
+.metric-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 1.25rem 1.5rem;
+  transition: all 0.25s;
+  position: relative; overflow: hidden;
+}
+
+.metric-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: 0; transition: opacity 0.3s;
+}
+
+.metric-card:hover { border-color: var(--border-hover); background: var(--bg-card-hover); }
+.metric-card:hover::before { opacity: 1; }
+
+.metric-label {
+  font-size: 0.72rem; color: var(--text-dim);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  font-family: var(--mono); margin-bottom: 0.5rem;
+}
+
+.metric-value {
+  font-size: 1.75rem; font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.metric-sub {
+  font-size: 0.78rem; margin-top: 0.35rem;
+  font-family: var(--mono);
+}
+
+.metric-sub.positive { color: var(--green); }
+.metric-sub.negative { color: var(--red); }
+.metric-sub.neutral { color: var(--text-dim); }
+
+/* Charts area */
+.charts-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.chart-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 1.5rem;
+}
+
+.chart-card h3 {
+  font-size: 0.85rem; font-weight: 500; color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.chart-wrap { position: relative; height: 280px; }
+
+/* Tables */
+.data-table-wrap {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 12px; overflow: hidden; margin-bottom: 2rem;
+}
+
+.data-table-header {
+  padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+}
+
+.data-table-header h3 { font-size: 0.9rem; font-weight: 600; }
+
+.filter-pills {
+  display: flex; gap: 0.5rem;
+}
+
+.filter-pill {
+  padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.72rem;
+  background: transparent; border: 1px solid var(--border);
+  color: var(--text-dim); cursor: pointer; transition: all 0.2s;
+  font-family: var(--font);
+}
+
+.filter-pill:hover { border-color: var(--border-hover); color: var(--text-muted); }
+.filter-pill.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+table {
+  width: 100%; border-collapse: collapse;
+}
+
+th {
+  text-align: left; padding: 0.75rem 1.5rem;
+  font-size: 0.7rem; font-weight: 600;
+  color: var(--text-dim); text-transform: uppercase;
+  letter-spacing: 0.08em; font-family: var(--mono);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; background: var(--bg-card);
+  cursor: pointer;
+}
+
+th:hover { color: var(--text-muted); }
+th.sorted-asc::after { content: ' ↑'; }
+th.sorted-desc::after { content: ' ↓'; }
+
+td {
+  padding: 0.85rem 1.5rem; font-size: 0.85rem;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+
+tr:hover td { background: rgba(255,255,255,0.02); }
+
+.badge {
+  display: inline-block; padding: 0.15rem 0.55rem; border-radius: 4px;
+  font-size: 0.7rem; font-weight: 600; font-family: var(--mono);
+}
+
+.badge-green { background: var(--green-dim); color: var(--green); }
+.badge-red { background: var(--red-dim); color: var(--red); }
+.badge-amber { background: var(--amber-dim); color: var(--amber); }
+.badge-neutral { background: rgba(255,255,255,0.05); color: var(--text-dim); }
+
+.moic-bar-wrap {
+  display: flex; align-items: center; gap: 8px;
+}
+
+.moic-bar {
+  height: 6px; border-radius: 3px; min-width: 4px;
+  transition: width 0.6s cubic-bezier(0.16,1,0.3,1);
+}
+
+/* Alert banner */
+.alert-banner {
+  background: linear-gradient(135deg, rgba(59,130,246,0.08), rgba(34,197,94,0.06));
+  border: 1px solid rgba(59,130,246,0.15);
+  border-radius: 12px; padding: 1.25rem 1.5rem;
+  margin-bottom: 2rem;
+  display: flex; gap: 1rem; align-items: flex-start;
+}
+
+.alert-icon {
+  width: 36px; height: 36px; border-radius: 8px;
+  background: var(--accent-glow); display: flex;
+  align-items: center; justify-content: center;
+  font-size: 1.1rem; flex-shrink: 0;
+}
+
+.alert-content h4 { font-size: 0.85rem; font-weight: 600; margin-bottom: 0.3rem; }
+.alert-content p { font-size: 0.8rem; color: var(--text-muted); line-height: 1.6; }
+
+/* LP status indicator */
+.status-dot {
+  width: 8px; height: 8px; border-radius: 50%; display: inline-block;
+  margin-right: 6px; vertical-align: middle;
+}
+.status-dot.full { background: var(--green); }
+.status-dot.partial { background: var(--amber); }
+.status-dot.none { background: var(--red); }
+
+/* LP detail drawer */
+.lp-row { cursor: pointer; }
+.lp-detail {
+  display: none; background: rgba(255,255,255,0.015);
+}
+.lp-detail.open { display: table-row; }
+.lp-detail td {
+  padding: 1rem 1.5rem; font-size: 0.8rem; color: var(--text-muted);
+}
+
+/* Summary box */
+.summary-box {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 2rem;
+  margin-bottom: 2rem;
+  font-size: 0.9rem; line-height: 1.8;
+  color: var(--text-muted);
+}
+
+.summary-box strong { color: var(--text); }
+.summary-box .highlight { color: var(--green); font-weight: 600; }
+
+/* Footer */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 2rem 0; margin-top: 3rem;
+  text-align: center; font-size: 0.72rem; color: var(--text-dim);
+  font-family: var(--mono);
+}
+
+/* Exit strategy cards */
+.exit-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem; margin-bottom: 2rem;
+}
+
+.exit-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 1.25rem 1.5rem;
+  transition: all 0.25s;
+}
+
+.exit-card:hover { border-color: var(--border-hover); }
+
+.exit-card-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.exit-card-name { font-weight: 600; font-size: 0.95rem; }
+.exit-card-type { font-size: 0.68rem; font-family: var(--mono); color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; }
+
+.exit-card-metrics {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.exit-metric-label { font-size: 0.65rem; color: var(--text-dim); font-family: var(--mono); text-transform: uppercase; }
+.exit-metric-value { font-size: 0.95rem; font-weight: 600; }
+
+.exit-card-action {
+  font-size: 0.78rem; color: var(--text-muted); line-height: 1.5;
+  padding-top: 0.75rem; border-top: 1px solid var(--border);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .charts-grid { grid-template-columns: 1fr; }
+  .metrics-row { grid-template-columns: 1fr 1fr; }
+  .container { padding: 0 1rem; }
+  .metric-value { font-size: 1.4rem; }
+  .header-top { flex-direction: column; gap: 1rem; }
+  .header-meta { text-align: left; }
+  table { font-size: 0.78rem; }
+  td, th { padding: 0.65rem 1rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="grain"></div>
+<div class="glow-orb"></div>
+<div class="glow-orb-2"></div>
+
+<div class="container">
+
+<header>
+  <div class="header-top">
+    <div class="logo-area">
+      <div class="logo-mark">10K</div>
+      <div class="logo-text">
+        <h1>10K Fund 1</h1>
+        <p>LP Dashboard · Confidential</p>
+      </div>
+    </div>
+    <div class="header-meta">
+      <div class="date">2026/05/12</div>
+      <div>NAV Report · v2.1</div>
+    </div>
+  </div>
+</header>
+
+<div class="nav-tabs" role="tablist">
+  <button class="nav-tab active" onclick="showTab('overview')" role="tab">Overview</button>
+  <button class="nav-tab" onclick="showTab('portfolio')" role="tab">一级组合</button>
+  <button class="nav-tab" onclick="showTab('fundraising')" role="tab">募资进展</button>
+  <button class="nav-tab" onclick="showTab('exit')" role="tab">退出 & 估值</button>
+  <button class="nav-tab" onclick="showTab('quant')" role="tab">量化策略</button>
+  <button class="nav-tab" onclick="showTab('summary')" role="tab">LP 简报</button>
+</div>
+
+<!-- ═══════════════ OVERVIEW ═══════════════ -->
+<section id="overview" class="section active">
+
+<div class="alert-banner">
+  <div class="alert-icon">⚡</div>
+  <div class="alert-content">
+    <h4>本期重大事件</h4>
+    <p>Robostrategy (BOT) 登陆美股,05/11 收盘 $39,MOIC 3.90x · Pieverse 已发币,现价 $0.80,MOIC 3.40x · 两项合计新增浮盈 +$410K</p>
+  </div>
+</div>
+
+<div class="metrics-row">
+  <div class="metric-card">
+    <div class="metric-label">到账总额</div>
+    <div class="metric-value">$6.60<span style="font-size:0.9rem;color:var(--text-dim)">M</span></div>
+    <div class="metric-sub neutral">18 个 LP · First Close</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">基金 NAV</div>
+    <div class="metric-value">$9.28<span style="font-size:0.9rem;color:var(--text-dim)">M</span></div>
+    <div class="metric-sub positive">+40.6% on called</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">Gross MOIC</div>
+    <div class="metric-value" style="color:var(--green)">1.41x</div>
+    <div class="metric-sub positive">+$2.68M unrealized</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">一级 MOIC</div>
+    <div class="metric-value">1.18x</div>
+    <div class="metric-sub positive">13 项目 · 浮盈 +$574K</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">一级部署</div>
+    <div class="metric-value">$3.25<span style="font-size:0.9rem;color:var(--text-dim)">M</span></div>
+    <div class="metric-sub neutral">FV $3.82M</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">流动端</div>
+    <div class="metric-value">$5.45<span style="font-size:0.9rem;color:var(--text-dim)">M</span></div>
+    <div class="metric-sub neutral">占 NAV 59%</div>
+  </div>
+</div>
+
+<div class="charts-grid">
+  <div class="chart-card">
+    <h3>NAV 构成</h3>
+    <div class="chart-wrap"><canvas id="navPie"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <h3>Matrixport 持仓明细</h3>
+    <div class="chart-wrap"><canvas id="liquidPie"></canvas></div>
+  </div>
+</div>
+
+<div class="charts-grid">
+  <div class="chart-card">
+    <h3>一级组合 MOIC 分布</h3>
+    <div class="chart-wrap"><canvas id="moicBar"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <h3>一级成本 vs 公允价值 ($K)</h3>
+    <div class="chart-wrap"><canvas id="costVsFv"></canvas></div>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════ PORTFOLIO ═══════════════ -->
+<section id="portfolio" class="section">
+
+<div class="metrics-row">
+  <div class="metric-card">
+    <div class="metric-label">项目数</div>
+    <div class="metric-value">13</div>
+    <div class="metric-sub neutral">4 已有价格 · 9 Pre-token</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">总成本</div>
+    <div class="metric-value">$3.25<span style="font-size:0.9rem;color:var(--text-dim)">M</span></div>
+    <div class="metric-sub neutral">占 Called 46%</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">总 FV</div>
+    <div class="metric-value">$3.82<span style="font-size:0.9rem;color:var(--text-dim)">M</span></div>
+    <div class="metric-sub positive">+$574K</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">MOIC</div>
+    <div class="metric-value" style="color:var(--green)">1.18x</div>
+    <div class="metric-sub neutral">Blended</div>
+  </div>
+</div>
+
+<div class="data-table-wrap">
+  <div class="data-table-header">
+    <h3>一级投资组合明细</h3>
+    <div class="filter-pills">
+      <button class="filter-pill active" onclick="filterPortfolio('all',this)">All</button>
+      <button class="filter-pill" onclick="filterPortfolio('winner',this)">Winners</button>
+      <button class="filter-pill" onclick="filterPortfolio('loser',this)">Losers</button>
+      <button class="filter-pill" onclick="filterPortfolio('listed',this)">已上市/发币</button>
+    </div>
+  </div>
+  <div style="overflow-x:auto; max-height: 600px; overflow-y: auto;">
+  <table id="portfolioTable">
+    <thead>
+      <tr>
+        <th onclick="sortTable(0)">项目</th>
+        <th onclick="sortTable(1)">日期</th>
+        <th onclick="sortTable(2)">成本</th>
+        <th onclick="sortTable(3)">FV</th>
+        <th onclick="sortTable(4)">MOIC</th>
+        <th>P&L</th>
+        <th>状态</th>
+        <th>MOIC</th>
+      </tr>
+    </thead>
+    <tbody id="portfolioBody"></tbody>
+  </table>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════ FUNDRAISING ═══════════════ -->
+<section id="fundraising" class="section">
+
+<div class="metrics-row">
+  <div class="metric-card">
+    <div class="metric-label">LP 数量</div>
+    <div class="metric-value">18</div>
+    <div class="metric-sub neutral">塞舌尔 + BVI</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">First Close</div>
+    <div class="metric-value">$6.60<span style="font-size:0.9rem;color:var(--text-dim)">M</span></div>
+    <div class="metric-sub positive">实际到账</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">最大单笔</div>
+    <div class="metric-value">$2.00<span style="font-size:0.9rem;color:var(--text-dim)">M</span></div>
+    <div class="metric-sub neutral">Middle East</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">平均出资</div>
+    <div class="metric-value">$367<span style="font-size:0.9rem;color:var(--text-dim)">K</span></div>
+    <div class="metric-sub neutral">Per LP</div>
+  </div>
+</div>
+
+<div class="data-table-wrap">
+  <div class="data-table-header">
+    <h3>LP 出资明细 (实际到账)</h3>
+  </div>
+  <div style="overflow-x:auto;">
+  <table>
+    <thead>
+      <tr>
+        <th>LP</th>
+        <th>到账金额</th>
+        <th>占比</th>
+        <th>备注</th>
+      </tr>
+    </thead>
+    <tbody id="lpBody"></tbody>
+  </table>
+  </div>
+</div>
+
+<div class="chart-card" style="margin-bottom:2rem">
+  <h3>LP 到账金额分布</h3>
+  <div class="chart-wrap"><canvas id="lpChart"></canvas></div>
+</div>
+</section>
+
+<!-- ═══════════════ EXIT ═══════════════ -->
+<section id="exit" class="section">
+
+<div class="metrics-row">
+  <div class="metric-card">
+    <div class="metric-label">已有价格项目</div>
+    <div class="metric-value">4</div>
+    <div class="metric-sub neutral">2 美股 / 代币浮盈 · 2 浮亏</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">流动性头寸合计 FV</div>
+    <div class="metric-value">$642<span style="font-size:0.9rem;color:var(--text-dim)">K</span></div>
+    <div class="metric-sub positive">成本 $550K</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">已实现回收</div>
+    <div class="metric-value">$37<span style="font-size:0.9rem;color:var(--text-dim)">K</span></div>
+    <div class="metric-sub neutral">Pieverse TGE</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">DPI</div>
+    <div class="metric-value" style="color:var(--amber)">0.005x</div>
+    <div class="metric-sub neutral">J-Curve 早期</div>
+  </div>
+</div>
+
+<div class="exit-grid" id="exitGrid"></div>
+
+<div class="chart-card" style="margin-bottom:2rem">
+  <h3>已上市 / 已发币项目 — 浮盈浮亏瀑布</h3>
+  <div class="chart-wrap"><canvas id="waterfallChart"></canvas></div>
+</div>
+</section>
+
+<!-- ═══════════════ LP SUMMARY ═══════════════ -->
+<!-- ═══════════════ QUANT ═══════════════ -->
+<section id="quant" class="section">
+
+<div class="metrics-row">
+  <div class="metric-card">
+    <div class="metric-label">量化 AUM</div>
+    <div class="metric-value">$2.00<span style="font-size:0.9rem;color:var(--text-dim)">M</span></div>
+    <div class="metric-sub neutral">两套策略运行中</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">跨所策略</div>
+    <div class="metric-value">$1.00<span style="font-size:0.9rem;color:var(--text-dim)">M</span></div>
+    <div class="metric-sub neutral">Multi-Exchange Arb</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">单所策略</div>
+    <div class="metric-value">$1.00<span style="font-size:0.9rem;color:var(--text-dim)">M</span></div>
+    <div class="metric-sub neutral">Single-Exchange MM</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">占 NAV</div>
+    <div class="metric-value">21.6<span style="font-size:0.9rem;color:var(--text-dim)">%</span></div>
+    <div class="metric-sub neutral">占流动端 36.7%</div>
+  </div>
+</div>
+
+<div class="charts-grid">
+  <div class="chart-card">
+    <h3>量化策略 AUM 分布</h3>
+    <div class="chart-wrap"><canvas id="quantPie"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <h3>基金资金总配置</h3>
+    <div class="chart-wrap"><canvas id="fundAlloc"></canvas></div>
+  </div>
+</div>
+
+<div class="data-table-wrap">
+  <div class="data-table-header">
+    <h3>策略明细</h3>
+  </div>
+  <table>
+    <thead><tr><th>策略</th><th>AUM</th><th>类型</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>跨所套利</strong></td>
+        <td style="font-family:var(--mono);font-weight:600">$1,000,000</td>
+        <td><span class="badge badge-neutral">Multi-Exchange</span></td>
+        <td style="color:var(--text-muted);font-size:0.82rem">跨交易所价差套利,低风险中性策略</td>
+      </tr>
+      <tr>
+        <td><strong>单所做市</strong></td>
+        <td style="font-family:var(--mono);font-weight:600">$1,000,000</td>
+        <td><span class="badge badge-neutral">Single-Exchange</span></td>
+        <td style="color:var(--text-muted);font-size:0.82rem">单交易所做市策略,赚取 bid-ask spread</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+</section>
+
+<section id="summary" class="section">
+
+<div class="summary-box">
+  <p style="font-size:1.1rem;color:var(--text);font-weight:600;margin-bottom:1.25rem;">致各位合伙人 · 2026年5月</p>
+  <p>截至本月,10K Fund 1 First Close 到账 <strong>$6.6M</strong>(18 个 LP),当前基金 NAV 达 <strong>$9.28M</strong>,<span class="highlight">Gross MOIC 1.41x</span>,处于 J-curve 早期稳健上行阶段。</p>
+  <br>
+  <p>一级组合已部署 <strong>13 个项目</strong>,合计成本 $3.25M、公允价值 $3.82M、Blended MOIC <span class="highlight">1.18x</span>。其中 4 个项目已具公允市场价格:</p>
+  <br>
+  <p>• <strong>Robostrategy (BOT)</strong> — 美股上市,持仓 10,000 股,成本 $10 → 收盘 $39,<span class="highlight">MOIC 3.90x</span>,浮盈 +$290K</p>
+  <p>• <strong>Pieverse</strong> — 已发币,现价 $0.80,FDV $738M,<span class="highlight">MOIC 3.40x</span>,已回本 $37K</p>
+  <p>• <strong>AISA</strong> — 未发币,跟随轮 $40M,<span class="highlight">MOIC 5.33x</span>,浮盈 +$216K</p>
+  <p>• <strong>Allscale</strong> — 未发币,跟随轮 $40M,<span class="highlight">MOIC 2.66x</span>,浮盈 +$166K</p>
+  <br>
+  <p>Top 5 合计浮盈 <span class="highlight">+$892K</span>,充分覆盖了 Solv (-$156K) 和 Carv (-$162K) 的代币回撤损失。</p>
+  <br>
+  <p>流动端资产 <strong>$5.45M</strong>(占 NAV 59%),包括 Matrixport $2.85M(USDT + BTC)、量化策略 $2.0M(跨所+单所各 $1M)、美股持仓 $0.6M(StableStock 账户)。</p>
+  <br>
+  <p style="color:var(--text-dim);font-size:0.8rem;font-family:var(--mono);">估值口径:已上市/已发币资产按二级市场价格 (收盘价/circulating market cap);未上市/未发币按最近一轮估值或成本价。 MOIC 均为 Gross,未扣除管理费和 Carry。</p>
+</div>
+
+</section>
+
+<footer>
+  10K Ventures · Fund 1 LP Dashboard · Confidential · Generated 2026-05-12
+</footer>
+
+</div>
+
+<script>
+// ══════════ TAB NAVIGATION ══════════
+function showTab(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ══════════ DATA ══════════
+const portfolio = [
+  { name:'AISA', date:'2025/09/09', cost:50, moic:5.33, status:'Pre-token', desc:'AI Agentic Payment, 跟随轮 $40M' },
+  { name:'Robostrategy', date:'2025/08/26', cost:100, moic:3.90, status:'美股上市', desc:'BOT, 10,000股 @ $39收盘' },
+  { name:'Pieverse', date:'2025/11/17', cost:50, moic:3.40, status:'已发币', desc:'$0.80, FDV $738M, 已回本$37K' },
+  { name:'Allscale', date:'2025/09/17', cost:100, moic:2.66, status:'Pre-token', desc:'Stablecoin NeoBank, 跟随轮 $40M' },
+  { name:'Axis AI', date:'2025/09/29', cost:100, moic:2.00, status:'Pre-token', desc:'Robotic Simulation, 跟随轮 $50M' },
+  { name:'Donut', date:'2025/12/24', cost:200, moic:1.00, status:'Pre-token', desc:'AI Agent Browser, $100M' },
+  { name:'POPX', date:'2025/11/20', cost:100, moic:1.00, status:'Pre-token', desc:'Web3 IP, $20M' },
+  { name:'SegaSwap', date:'2025/09/08', cost:100, moic:1.00, status:'Pre-token', desc:'Dex on SonicSVM, $25M' },
+  { name:'Enrooch', date:'—', cost:50, moic:1.00, status:'Pipeline', desc:'Wired' },
+  { name:'Lucida', date:'2026/01/07', cost:1000, moic:1.00, status:'Pre-token', desc:'AI Quant Engine, $33M, Anchor' },
+  { name:'StableStock', date:'2026/03/15', cost:1000, moic:1.00, status:'Pre-token', desc:'Stablecoin Broker, $25M, Anchor' },
+  { name:'Solv', date:'2025/05/31', cost:200, moic:0.22, status:'已发币', desc:'SOLV $0.004, ATH跌幅-98%' },
+  { name:'Carv', date:'2025/05/31', cost:200, moic:0.19, status:'已发币', desc:'CARV $0.058, ATH跌幅-96%' },
+];
+
+const lps = [
+  { name:'Inception Capital', paid:1000000, note:'' },
+  { name:'Sonic', paid:500000, note:'' },
+  { name:'Harry Wan', paid:0, note:'' },
+  { name:'Chao Wang', paid:200000, note:'' },
+  { name:'Yiling', paid:250000, note:'' },
+  { name:'Lei Wang', paid:150000, note:'' },
+  { name:'D11 (Solv)', paid:200000, note:'' },
+  { name:'Xiaoyu Yuan', paid:50000, note:'' },
+  { name:'Sherlock', paid:250000, note:'' },
+  { name:'Peet', paid:50000, note:'' },
+  { name:'Bo Liu', paid:350000, note:'' },
+  { name:'Michael Jin', paid:350000, note:'GP' },
+  { name:'Middle East', paid:2000000, note:'' },
+  { name:'Johnson Chow', paid:250000, note:'' },
+  { name:'Owen Xiang (30+carv)', paid:500000, note:'' },
+  { name:'Xi Lin', paid:100000, note:'' },
+  { name:'Yu Pu', paid:200000, note:'' },
+  { name:'Kevin Xu', paid:200000, note:'' },
+];
+
+// ══════════ RENDER PORTFOLIO TABLE ══════════
+function renderPortfolio(filter) {
+  const tbody = document.getElementById('portfolioBody');
+  tbody.innerHTML = '';
+  let data = [...portfolio];
+  if (filter === 'winner') data = data.filter(p => p.moic > 1);
+  if (filter === 'loser') data = data.filter(p => p.moic < 1);
+  if (filter === 'listed') data = data.filter(p => p.status.includes('已') || p.status.includes('美股'));
+
+  data.forEach(p => {
+    const fv = p.cost * p.moic;
+    const pl = fv - p.cost;
+    const moicColor = p.moic >= 2 ? 'var(--green)' : p.moic >= 1 ? 'var(--text)' : 'var(--red)';
+    const plBadge = pl > 0 ? 'badge-green' : pl < 0 ? 'badge-red' : 'badge-neutral';
+    const barW = Math.min(Math.max(p.moic / 5.33 * 120, 4), 120);
+    const barColor = p.moic >= 2 ? 'var(--green)' : p.moic >= 1 ? 'var(--text-dim)' : 'var(--red)';
+    const statusBadge = p.status.includes('已') || p.status.includes('美股') ? 'badge-green' : p.status === 'Pipeline' ? 'badge-amber' : 'badge-neutral';
+
+    tbody.innerHTML += `<tr title="${p.desc}">
+      <td><strong>${p.name}</strong><br><span style="font-size:0.72rem;color:var(--text-dim)">${p.desc.substring(0,35)}</span></td>
+      <td style="font-family:var(--mono);font-size:0.78rem;color:var(--text-dim)">${p.date}</td>
+      <td style="font-family:var(--mono)">$${p.cost.toLocaleString()}K</td>
+      <td style="font-family:var(--mono)">$${Math.round(fv).toLocaleString()}K</td>
+      <td style="font-family:var(--mono);font-weight:600;color:${moicColor}">${p.moic.toFixed(2)}x</td>
+      <td><span class="badge ${plBadge}">${pl >= 0 ? '+' : ''}$${Math.round(pl).toLocaleString()}K</span></td>
+      <td><span class="badge ${statusBadge}">${p.status}</span></td>
+      <td><div class="moic-bar-wrap"><div class="moic-bar" style="width:${barW}px;background:${barColor}"></div></div></td>
+    </tr>`;
+  });
+}
+
+function filterPortfolio(filter, el) {
+  document.querySelectorAll('#portfolio .filter-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  renderPortfolio(filter);
+}
+
+// ══════════ RENDER LP TABLE ══════════
+function renderLP() {
+  const tbody = document.getElementById('lpBody');
+  tbody.innerHTML = '';
+  const total = lps.reduce((s,l) => s + l.paid, 0);
+
+  lps.forEach(l => {
+    const pct = (l.paid / total * 100).toFixed(1);
+    const fmt = l.paid > 0 ? '$' + l.paid.toLocaleString() : '$0';
+    const noteTag = l.note ? `<span class="badge badge-neutral">${l.note}</span>` : '';
+
+    tbody.innerHTML += `<tr>
+      <td>${l.name}</td>
+      <td style="font-family:var(--mono);font-weight:600">${fmt}</td>
+      <td style="font-family:var(--mono);font-size:0.82rem;color:var(--text-dim)">${l.paid > 0 ? pct + '%' : '—'}</td>
+      <td>${noteTag}</td>
+    </tr>`;
+  });
+
+  // Total row
+  tbody.innerHTML += `<tr style="border-top:2px solid var(--border)">
+    <td style="font-weight:700">合计 (First Close)</td>
+    <td style="font-family:var(--mono);font-weight:700;color:var(--green)">$${total.toLocaleString()}</td>
+    <td style="font-family:var(--mono);font-weight:600">100%</td>
+    <td><span class="badge badge-green">18 LPs</span></td>
+  </tr>`;
+}
+
+function filterLP(filter, el) {
+  // kept for compatibility but no-op now
+  renderLP();
+}
+
+// ══════════ EXIT CARDS ══════════
+function renderExitCards() {
+  const exits = [
+    { name:'Robostrategy', type:'美股 · BOT', cost:'$100K', fv:'$390K', moic:'3.90x', moicNum:3.90, color:'var(--green)',
+      action:'已浮盈 +$290K。建议在 $40-50 区间分 3 批减持,锁定 3x DPI。日均成交 ~$33M,单次卖出不超过 3,000 股。' },
+    { name:'Pieverse', type:'代币 · PIEVERSE', cost:'$50K', fv:'$170K', moic:'3.40x', moicNum:3.40, color:'var(--green)',
+      action:'已回本 $37K,剩余按 vesting 释放。投资人份额 5月起解锁,关注抛压。目标 $1.20+ 分批退出。' },
+    { name:'Solv', type:'代币 · SOLV', cost:'$200K', fv:'$44K', moic:'0.22x', moicNum:0.22, color:'var(--red)',
+      action:'距 ATL $0.0023 仅 +52%,代币解锁仍重(月 ~2%)。不急减仓,设 5x rebound trigger。' },
+    { name:'Carv', type:'代币 · CARV', cost:'$200K', fv:'$38K', moic:'0.19x', moicNum:0.19, color:'var(--red)',
+      action:'距 ATH -96%。05/17 有 6.43% 解锁,等冲击消化后再决策。AI Agent 叙事反复可能带来波段。' },
+  ];
+
+  const grid = document.getElementById('exitGrid');
+  exits.forEach(e => {
+    grid.innerHTML += `<div class="exit-card">
+      <div class="exit-card-header">
+        <span class="exit-card-name">${e.name}</span>
+        <span class="exit-card-type">${e.type}</span>
+      </div>
+      <div class="exit-card-metrics">
+        <div><div class="exit-metric-label">成本</div><div class="exit-metric-value">${e.cost}</div></div>
+        <div><div class="exit-metric-label">FV</div><div class="exit-metric-value">${e.fv}</div></div>
+        <div><div class="exit-metric-label">MOIC</div><div class="exit-metric-value" style="color:${e.color}">${e.moic}</div></div>
+      </div>
+      <div class="exit-card-action">${e.action}</div>
+    </div>`;
+  });
+}
+
+// ══════════ SORTING ══════════
+let sortCol = -1, sortAsc = true;
+function sortTable(col) {
+  if (sortCol === col) sortAsc = !sortAsc; else { sortCol = col; sortAsc = true; }
+  const keys = ['name','date','cost','fv','moic'];
+  portfolio.sort((a, b) => {
+    let va, vb;
+    if (col === 3) { va = a.cost * a.moic; vb = b.cost * b.moic; }
+    else if (col === 5) { va = a.cost * (a.moic - 1); vb = b.cost * (b.moic - 1); }
+    else { va = a[keys[col]]; vb = b[keys[col]]; }
+    if (typeof va === 'string') return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+    return sortAsc ? va - vb : vb - va;
+  });
+  renderPortfolio('all');
+  document.querySelectorAll('#portfolio .filter-pill').forEach(p => p.classList.remove('active'));
+  document.querySelector('#portfolio .filter-pill').classList.add('active');
+}
+
+// ══════════ CHARTS ══════════
+const chartDefaults = {
+  font: { family: "'DM Sans', sans-serif" },
+};
+
+Chart.defaults.color = '#8b8a86';
+Chart.defaults.font.family = "'DM Sans', sans-serif";
+
+function initCharts() {
+  // 1. NAV Pie — 四大块
+  new Chart(document.getElementById('navPie'), {
+    type: 'doughnut',
+    data: {
+      labels: ['一级投资 FV', 'Matrixport (USDT+BTC)', '量化策略', '美股 (StableStock)'],
+      datasets: [{ data: [3825, 2853, 2000, 600], backgroundColor: ['#22c55e', '#3b82f6', '#a78bfa', '#f59e0b'], borderWidth: 0, borderRadius: 4 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '65%',
+      plugins: {
+        legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true, pointStyleWidth: 10, font: { size: 11 } } },
+        tooltip: { callbacks: { label: c => c.label + ': $' + (c.parsed/1000).toFixed(2) + 'M' } }
+      }
+    }
+  });
+
+  // 2. MOIC Bar
+  const sortedP = [...portfolio].sort((a,b) => b.moic - a.moic);
+  new Chart(document.getElementById('moicBar'), {
+    type: 'bar',
+    data: {
+      labels: sortedP.map(p => p.name),
+      datasets: [{
+        data: sortedP.map(p => p.moic),
+        backgroundColor: sortedP.map(p => p.moic >= 2 ? '#22c55e' : p.moic >= 1 ? '#5a5955' : '#ef4444'),
+        borderWidth: 0, borderRadius: 3, barThickness: 18
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.parsed.y.toFixed(2) + 'x' } } },
+      scales: {
+        x: { ticks: { font: { size: 10 }, maxRotation: 55 }, grid: { display: false } },
+        y: { ticks: { callback: v => v + 'x', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' }, beginAtZero: true }
+      }
+    }
+  });
+
+  // 3. Liquid breakdown — Matrixport明细
+  new Chart(document.getElementById('liquidPie'), {
+    type: 'doughnut',
+    data: {
+      labels: ['USDT', 'BTC (4.286)', '结构化OTC (3.98 BTC)'],
+      datasets: [{ data: [2504, 25, 323], backgroundColor: ['#3b82f6', '#f59e0b', '#a78bfa'], borderWidth: 0, borderRadius: 4 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '60%',
+      plugins: {
+        legend: { position: 'bottom', labels: { padding: 12, usePointStyle: true, pointStyleWidth: 10, font: { size: 11 } } },
+        tooltip: { callbacks: { label: c => c.label + ': $' + (c.parsed/1000).toFixed(2) + 'M' } }
+      }
+    }
+  });
+
+  // 4. Cost vs FV horizontal
+  const topP = [...portfolio].sort((a,b) => b.cost - a.cost);
+  new Chart(document.getElementById('costVsFv'), {
+    type: 'bar',
+    data: {
+      labels: topP.map(p => p.name),
+      datasets: [
+        { label: '成本', data: topP.map(p => p.cost), backgroundColor: '#5a5955', borderWidth: 0, borderRadius: 3 },
+        { label: '公允价值', data: topP.map(p => Math.round(p.cost * p.moic)), backgroundColor: '#3b82f6', borderWidth: 0, borderRadius: 3 }
+      ]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', align: 'end', labels: { font: { size: 11 }, boxWidth: 10, boxHeight: 10, padding: 12 } },
+        tooltip: { callbacks: { label: c => c.dataset.label + ': $' + c.parsed.x + 'K' } }
+      },
+      scales: {
+        x: { ticks: { callback: v => '$' + v + 'K', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' } },
+        y: { ticks: { font: { size: 11 } }, grid: { display: false } }
+      }
+    }
+  });
+
+  // 5. LP到账分布
+  const sortedLP = [...lps].filter(l => l.paid > 0).sort((a,b) => b.paid - a.paid);
+  new Chart(document.getElementById('lpChart'), {
+    type: 'bar',
+    data: {
+      labels: sortedLP.map(l => l.name),
+      datasets: [
+        { label: '到账', data: sortedLP.map(l => l.paid), backgroundColor: '#3b82f6', borderWidth: 0, borderRadius: 3, barThickness: 18 }
+      ]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => '$' + c.parsed.x.toLocaleString() } }
+      },
+      scales: {
+        x: { ticks: { callback: v => v >= 1000000 ? '$' + (v/1000000) + 'M' : '$' + (v/1000) + 'K', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' } },
+        y: { ticks: { font: { size: 10 } }, grid: { display: false } }
+      }
+    }
+  });
+
+  // 6. Waterfall chart
+  const waterfallData = [
+    { label: 'Robostrategy', value: 290, color: '#22c55e' },
+    { label: 'AISA', value: 216, color: '#22c55e' },
+    { label: 'Allscale', value: 166, color: '#22c55e' },
+    { label: 'Pieverse', value: 120, color: '#22c55e' },
+    { label: 'Axis AI', value: 100, color: '#22c55e' },
+    { label: 'Carv', value: -162, color: '#ef4444' },
+    { label: 'Solv', value: -156, color: '#ef4444' },
+  ];
+
+  let cumulative = 0;
+  const hiddenData = [], visibleData = [];
+  waterfallData.forEach(d => {
+    if (d.value >= 0) {
+      hiddenData.push(cumulative);
+      visibleData.push(d.value);
+      cumulative += d.value;
+    } else {
+      cumulative += d.value;
+      hiddenData.push(cumulative);
+      visibleData.push(Math.abs(d.value));
+    }
+  });
+  hiddenData.push(0);
+  visibleData.push(cumulative);
+
+  new Chart(document.getElementById('waterfallChart'), {
+    type: 'bar',
+    data: {
+      labels: [...waterfallData.map(d => d.label), 'Net P&L'],
+      datasets: [
+        { label: 'hidden', data: hiddenData, backgroundColor: 'transparent', borderWidth: 0 },
+        { label: 'value', data: visibleData, backgroundColor: [...waterfallData.map(d => d.color), '#3b82f6'], borderWidth: 0, borderRadius: 3 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { filter: t => t.datasetIndex === 1, callbacks: { label: c => {
+          const idx = c.dataIndex;
+          if (idx === waterfallData.length) return 'Net: +$' + cumulative + 'K';
+          const d = waterfallData[idx];
+          return (d.value >= 0 ? '+' : '') + '$' + d.value + 'K';
+        }}}
+      },
+      scales: {
+        x: { stacked: true, ticks: { font: { size: 10 }, maxRotation: 45 }, grid: { display: false } },
+        y: { stacked: true, ticks: { callback: v => '$' + v + 'K', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' } }
+      }
+    }
+  });
+
+  // 7. Quant Pie
+  new Chart(document.getElementById('quantPie'), {
+    type: 'doughnut',
+    data: {
+      labels: ['跨所套利', '单所做市'],
+      datasets: [{ data: [1000, 1000], backgroundColor: ['#a78bfa', '#60a5fa'], borderWidth: 0, borderRadius: 4 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '60%',
+      plugins: {
+        legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true, pointStyleWidth: 10, font: { size: 12 } } },
+        tooltip: { callbacks: { label: c => c.label + ': $' + (c.parsed/1000).toFixed(1) + 'M' } }
+      }
+    }
+  });
+
+  // 8. Fund Total Allocation
+  new Chart(document.getElementById('fundAlloc'), {
+    type: 'doughnut',
+    data: {
+      labels: ['一级投资', 'Matrixport', '量化策略', '美股 StableStock'],
+      datasets: [{ data: [3250, 2853, 2000, 600], backgroundColor: ['#22c55e', '#3b82f6', '#a78bfa', '#f59e0b'], borderWidth: 0, borderRadius: 4 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '60%',
+      plugins: {
+        legend: { position: 'bottom', labels: { padding: 12, usePointStyle: true, pointStyleWidth: 10, font: { size: 11 } } },
+        tooltip: { callbacks: { label: c => c.label + ': $' + (c.parsed/1000).toFixed(2) + 'M' } }
+      }
+    }
+  });
+}
+
+// ══════════ INIT ══════════
+renderPortfolio('all');
+renderLP();
+renderExitCards();
+initCharts();
+</script>
+</body>
+</html>
