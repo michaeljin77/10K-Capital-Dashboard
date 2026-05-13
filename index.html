@@ -157,8 +157,8 @@ header {
 .metric-card:hover::before { opacity: 1; }
 
 .metric-label {
-  font-size: 0.72rem; color: var(--text-dim);
-  text-transform: uppercase; letter-spacing: 0.1em;
+  font-size: 0.82rem; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.08em;
   font-family: var(--mono); margin-bottom: 0.5rem;
 }
 
@@ -424,13 +424,13 @@ footer {
   </div>
   <div class="metric-card">
     <div class="metric-label">基金 NAV</div>
-    <div class="metric-value">$9.28<span style="font-size:0.9rem;color:var(--text-dim)">M</span></div>
-    <div class="metric-sub positive">+40.6% on called</div>
+    <div class="metric-value">$7.27<span style="font-size:0.9rem;color:var(--text-dim)">M</span></div>
+    <div class="metric-sub positive">+10.2% on called</div>
   </div>
   <div class="metric-card">
     <div class="metric-label">Gross MOIC</div>
-    <div class="metric-value" style="color:var(--green)">1.41x</div>
-    <div class="metric-sub positive">+$2.68M unrealized</div>
+    <div class="metric-value" style="color:var(--green)">1.10x</div>
+    <div class="metric-sub positive">+$0.67M unrealized</div>
   </div>
   <div class="metric-card">
     <div class="metric-label">一级 MOIC</div>
@@ -443,9 +443,28 @@ footer {
     <div class="metric-sub neutral">FV $3.82M</div>
   </div>
   <div class="metric-card">
-    <div class="metric-label">流动端</div>
-    <div class="metric-value">$5.45<span style="font-size:0.9rem;color:var(--text-dim)">M</span></div>
-    <div class="metric-sub neutral">占 NAV 59%</div>
+    <div class="metric-label">现金+BTC</div>
+    <div class="metric-value">$2.85<span style="font-size:0.9rem;color:var(--text-dim)">M</span></div>
+    <div class="metric-sub neutral">占 NAV 39%</div>
+  </div>
+</div>
+
+<div style="margin: 1.5rem 0 0.75rem; font-size:0.7rem; color:var(--text-dim); font-family:var(--mono); text-transform:uppercase; letter-spacing:0.12em; border-top:1px solid var(--border); padding-top:1.25rem;">── 量化二级业务（独立核算，不计入基金 NAV）──</div>
+<div class="metrics-row">
+  <div class="metric-card">
+    <div class="metric-label">量化 AUM</div>
+    <div class="metric-value">$2.00<span style="font-size:0.9rem;color:var(--text-dim)">M</span></div>
+    <div class="metric-sub neutral">两套策略运行中</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">跨所策略</div>
+    <div class="metric-value">$1.00<span style="font-size:0.9rem;color:var(--text-dim)">M</span></div>
+    <div class="metric-sub neutral">Multi-Exchange Arb</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">单所策略</div>
+    <div class="metric-value">$1.00<span style="font-size:0.9rem;color:var(--text-dim)">M</span></div>
+    <div class="metric-sub neutral">Single-Exchange MM</div>
   </div>
 </div>
 
@@ -484,7 +503,7 @@ footer {
   <div class="metric-card">
     <div class="metric-label">总成本</div>
     <div class="metric-value">$3.25<span style="font-size:0.9rem;color:var(--text-dim)">M</span></div>
-    <div class="metric-sub neutral">占 Called 46%</div>
+    <div class="metric-sub neutral">占 Called 49%</div>
   </div>
   <div class="metric-card">
     <div class="metric-label">总 FV</div>
@@ -634,9 +653,9 @@ footer {
     <div class="metric-sub neutral">Single-Exchange MM</div>
   </div>
   <div class="metric-card">
-    <div class="metric-label">占 NAV</div>
+    <div class="metric-label">占总管理规模</div>
     <div class="metric-value">21.6<span style="font-size:0.9rem;color:var(--text-dim)">%</span></div>
-    <div class="metric-sub neutral">占流动端 36.7%</div>
+    <div class="metric-sub neutral">独立核算，不计入基金 NAV</div>
   </div>
 </div>
 
@@ -680,7 +699,7 @@ footer {
 
 <div class="summary-box">
   <p style="font-size:1.1rem;color:var(--text);font-weight:600;margin-bottom:1.25rem;">致各位合伙人 · 2026年5月</p>
-  <p>截至本月,10K Fund 1 First Close 到账 <strong>$6.6M</strong>(18 个 LP),当前基金 NAV 达 <strong>$9.28M</strong>,<span class="highlight">Gross MOIC 1.41x</span>,处于 J-curve 早期稳健上行阶段。</p>
+  <p>截至本月,10K Fund 1 First Close 到账 <strong>$6.6M</strong>(18 个 LP),当前基金 NAV 达 <strong>$7.27M</strong>,<span class="highlight">Gross MOIC 1.10x</span>,处于 J-curve 早期稳健上行阶段。</p>
   <br>
   <p>一级组合已部署 <strong>13 个项目</strong>,合计成本 $3.25M、公允价值 $3.82M、Blended MOIC <span class="highlight">1.18x</span>。其中 4 个项目已具公允市场价格:</p>
   <br>
@@ -691,7 +710,7 @@ footer {
   <br>
   <p>Top 5 合计浮盈 <span class="highlight">+$892K</span>,充分覆盖了 Solv (-$156K) 和 Carv (-$162K) 的代币回撤损失。</p>
   <br>
-  <p>流动端资产 <strong>$5.45M</strong>(占 NAV 59%),包括 Matrixport $2.85M(USDT + BTC)、量化策略 $2.0M(跨所+单所各 $1M)、美股持仓 $0.6M(StableStock 账户)。</p>
+  <p>现金+BTC 持仓(Matrixport 账户)<strong>$2.85M</strong>(占 NAV 39%),含 USDT 及 BTC 头寸。量化二级业务独立核算,AUM $2.0M(跨所+单所各 $1M),不计入基金 NAV。美股持仓 $0.6M(StableStock 账户)。</p>
   <br>
   <p style="color:var(--text-dim);font-size:0.8rem;font-family:var(--mono);">估值口径:已上市/已发币资产按二级市场价格 (收盘价/circulating market cap);未上市/未发币按最近一轮估值或成本价。 MOIC 均为 Gross,未扣除管理费和 Carry。</p>
 </div>
@@ -882,8 +901,8 @@ function initCharts() {
   new Chart(document.getElementById('navPie'), {
     type: 'doughnut',
     data: {
-      labels: ['一级投资 FV', 'Matrixport (USDT+BTC)', '量化策略', '美股 (StableStock)'],
-      datasets: [{ data: [3825, 2853, 2000, 600], backgroundColor: ['#22c55e', '#3b82f6', '#a78bfa', '#f59e0b'], borderWidth: 0, borderRadius: 4 }]
+      labels: ['一级投资 FV', 'Matrixport (USDT+BTC)', '美股 (StableStock)'],
+      datasets: [{ data: [3825, 2853, 600], backgroundColor: ['#22c55e', '#3b82f6', '#f59e0b'], borderWidth: 0, borderRadius: 4 }]
     },
     options: {
       responsive: true, maintainAspectRatio: false, cutout: '65%',
