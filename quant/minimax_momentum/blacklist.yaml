@@ -1,0 +1,25 @@
+# Catalyst 黑名单 — 命中即当日拒单（M-DIR 与 M-BASIS 均适用）
+# 类别: lockup(解禁) / earnings(财报) / rating(投行评级密集) / release(模型发布)
+#       / index(指数调整) / other
+# 维护规则 (STRATEGY.md §6.3): 事后发现漏录 catalyst = 事故，补日历 + 当周停跑。
+# 日期支持单日 (date) 或区间 (start/end，含两端)。
+
+entries:
+  - date: 2026-07-13
+    category: lockup
+    note: "首轮基石/早期投资者解禁天量抛压延续窗口（砸 ~18% 后余震，按周拉黑）"
+  - start: 2026-07-13
+    end: 2026-07-17
+    category: lockup
+    note: "解禁周整周拉黑"
+  - date: 2026-07-09
+    category: release
+    note: "M3 模型发布催化"
+  - start: 2026-07-26
+    end: 2026-07-29
+    category: other
+    note: "WAIC 世界人工智能大会，发布/订单传闻密集"
+  - date: 2026-08-21
+    category: index
+    note: "恒指公司季检结果公布（纳入预期博弈日）"
+  # TODO: 财报日待公司公布后补录；投行评级密集日按周人工滚动维护

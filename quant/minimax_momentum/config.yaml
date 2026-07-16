@@ -1,0 +1,40 @@
+# MiniMax 隔夜情绪 Gap 策略 v0.1 — 参数全部为回测前初值，校准后更新
+# 阈值只能收紧不能放宽（见 STRATEGY.md §4）
+
+instrument:
+  hk_ticker: "0100.HK"          # 稀宇科技 MINIMAX-WP (yfinance 格式)
+  hk_code: "00100"
+  perp_coin: "MINIMAX"          # Hyperliquid coin 名，首次运行前用 run_basis.py --check 核实
+  hyperliquid_api: "https://api.hyperliquid.xyz/info"
+
+# 美股 AI 情绪篮子（MiniMax 无 ADR，用中概 AI + 纳指/费半做预测源）
+basket:
+  KWEB: 0.50
+  QQQ: 0.25
+  SOXX: 0.25
+
+signal:
+  min_abs_basket_ret: 0.015     # 篮子隔夜 |收益| 阈值
+  min_beta: 0.30                # 传导比下限
+  min_beta_tstat: 2.0
+  min_clean_days: 20            # beta 估计最少干净样本
+  max_priced_in: 0.50           # 已定价比例 ≥ 50% 拒单（perp 预检 + IEP 终检两次都要过）
+  beta_window: 60               # 滚动回归窗口（交易日）
+
+risk:
+  paper_notional_usd: 10000
+  soft_stop: -0.02              # 减半
+  hard_stop: -0.04              # 无条件全平
+  hard_flat_hkt: "10:00"        # 无条件硬平时刻，Q3 衰减实测后只能提前
+  max_pct_quant_aum: 0.03       # 实盘化后单笔上限（paper 阶段不生效）
+
+basis:
+  min_abs_basis: 0.015          # 扣成本前的 basis 触发阈值
+  perp_taker_fee: 0.00045       # 单边
+  hk_round_trip_cost: 0.0027    # 印花税 0.1%×2 + 佣金/滑点预算
+  funding_budget_8h: 0.0005     # 持仓期 funding 预算（按 8h 一期）
+  max_pct_quant_aum: 0.10
+
+paths:
+  log_dir: "logs"
+  data_dir: "data"
